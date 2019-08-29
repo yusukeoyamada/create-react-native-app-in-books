@@ -6,109 +6,134 @@
  * @flow
  */
 
-import React, {Fragment} from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-} from 'react-native';
+import React, {Component} from 'react';
+import {Platform, StyleSheet, View, Text, FlatList, Image} from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const baseURL =
+  'https://us-central1-chatapplication-b9539.cloudfunctions.net/v1';
 
-const App = () => {
+type MessageCellProps = {
+  message: Message,
+};
+
+const MessageCell = (props: MessageCellProps) => {
   return (
-    <Fragment>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Fragment>
+    <View style={styles.message}>
+      <Image
+        style={styles.messageUserAvator}
+        source={
+          props.message.user.avator || require('./images/avator_blank.png')
+        }
+      />
+      <View style={styles.messageText}>
+        <View style={styles.messageAbout}>
+          <Text style={styles.messageUser}>{props.message.user.name}</Text>
+          <Text style={styles.messageDate}>{props.message.date}</Text>
+        </View>
+        <Text style={styles.messageBody}>{props.message.body}</Text>
+      </View>
+    </View>
   );
 };
 
+type Message = {
+  id: string,
+  body: string,
+  user: {
+    id: string,
+    name: string,
+    avatar: string,
+  },
+  date: string,
+};
+
+type State = {
+  messages: Array<Message>,
+};
+
+type Props = {};
+
+export default class App extends Component<Props, State> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      messages: [],
+    };
+  }
+
+  componentDidMount() {
+    fetch(baseURL + '/channels/general/messages')
+      .then(response => response.json())
+      .then(json => this.setState({messages: json.messages}))
+      .catch(error => console.log(error));
+  }
+
+  render() {
+    console.log(this.state.messages.slice().reverse());
+    return (
+      <View style={styles.container}>
+        <FlatList
+          style={styles.list}
+          data={this.state.messages.slice().reverse()}
+          keyExtractor={(item, index) => item.id}
+          renderItem={({item}) => {
+            return <MessageCell message={item} />;
+          }}
+        />
+      </View>
+    );
+  }
+}
+
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#ecf0f1',
   },
-  engine: {
-    position: 'absolute',
-    right: 0,
+  // container: {
+  //   flex: 1,
+  //   justifyContent: 'flex-start',
+  //   backgroundColor: '#F5FCFF',
+  // },
+  list: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 20 : 0,
   },
-  body: {
-    backgroundColor: Colors.white,
+  message: {
+    flex: 1,
+    marginLeft: 16,
+    marginRight: 16,
+    height: 72,
+    paddingTop: 16,
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: '#eaeaea',
   },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  messageUserAvator: {
+    width: 40,
+    height: 40,
+    marginRight: 16,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
+  messageText: {
+    flex: 1,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
+  messageAbout: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 2,
   },
-  highlight: {
-    fontWeight: '700',
+  messageUser: {
+    fontSize: 14,
+    fontWeight: 'bold',
   },
-  footer: {
-    color: Colors.dark,
+  messageDate: {
+    marginLeft: 8,
     fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
+    color: 'grey',
+  },
+  messageBody: {
+    fontSize: 14,
   },
 });
-
-export default App;
