@@ -7,7 +7,16 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, View, Text, FlatList, Image} from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  Image,
+  TextInput,
+  Button,
+} from 'react-native';
 
 const baseURL =
   'https://us-central1-chatapplication-b9539.cloudfunctions.net/v1';
@@ -47,8 +56,13 @@ type Message = {
   date: string,
 };
 
+type PostMessage = {
+  body: string,
+};
+
 type State = {
   messages: Array<Message>,
+  messageBody: string,
 };
 
 type Props = {};
@@ -58,13 +72,35 @@ export default class App extends Component<Props, State> {
     super(props);
     this.state = {
       messages: [],
+      messageBody: '',
     };
   }
 
   componentDidMount() {
+    this.fetchMessages();
+  }
+
+  fetchMessages() {
     fetch(baseURL + '/channels/general/messages')
       .then(response => response.json())
       .then(json => this.setState({messages: json.messages}))
+      .catch(error => console.log(error));
+  }
+
+  postMessage() {
+    const payload: PostMessage = {body: this.state.messageBody};
+    fetch(baseURL + '/channels/general/messages', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+      .then(response => {
+        this.fetchMessages();
+        this.setState({messageBody: ''});
+      })
       .catch(error => console.log(error));
   }
 
@@ -72,6 +108,19 @@ export default class App extends Component<Props, State> {
     console.log(this.state.messages.slice().reverse());
     return (
       <View style={styles.container}>
+        <View style={styles.action}>
+          <TextInput
+            style={styles.actionTextInput}
+            placeholder="Message #general"
+            onChangeText={text => this.setState({messageBody: text})}
+            value={this.state.messageBody}
+          />
+          <Button
+            title="Send"
+            onPress={() => this.postMessage()}
+            disabled={this.state.messageBody.length === 0}
+          />
+        </View>
         <FlatList
           style={styles.list}
           data={this.state.messages.slice().reverse()}
@@ -88,17 +137,11 @@ export default class App extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: '#ecf0f1',
+    justifyContent: 'flex-start',
+    backgroundColor: '#F5FCFF',
   },
-  // container: {
-  //   flex: 1,
-  //   justifyContent: 'flex-start',
-  //   backgroundColor: '#F5FCFF',
-  // },
   list: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 20 : 0,
   },
   message: {
     flex: 1,
@@ -135,5 +178,17 @@ const styles = StyleSheet.create({
   },
   messageBody: {
     fontSize: 14,
+  },
+  action: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderColor: '#eaeaea',
+    paddingTop: Platform.OS === 'ios' ? 40 : 0,
+  },
+  actionTextInput: {
+    flex: 1,
+    paddingLeft: 16,
   },
 });
