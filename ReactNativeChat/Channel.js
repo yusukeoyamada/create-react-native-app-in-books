@@ -16,6 +16,7 @@ import {
   TextInput,
   Button,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import {type NavigationScreenProp} from 'react-navigation';
 
@@ -64,6 +65,7 @@ type PostMessage = {
 type State = {
   messages: Array<Message>,
   messageBody: string,
+  isLoading: false,
 };
 
 type Props = {
@@ -103,10 +105,14 @@ export default class Channel extends Component<Props, State> {
   }
 
   fetchMessages() {
+    this.setState({isLoading: true});
     fetch(this.getEndPointURL())
       .then(response => response.json())
-      .then(json => this.setState({messages: json.messages}))
-      .catch(error => console.log(error));
+      .then(json => this.setState({messages: json.messages, isLoading: false}))
+      .catch(error => {
+        console.log(error);
+        this.setState({isLoading: false});
+      });
   }
 
   postMessage() {
@@ -127,7 +133,6 @@ export default class Channel extends Component<Props, State> {
   }
 
   render() {
-    console.log(this.props);
     const {channelName} = this.props.navigation.state.params;
     return (
       <View style={styles.container}>
@@ -144,14 +149,18 @@ export default class Channel extends Component<Props, State> {
             disabled={this.state.messageBody.length === 0}
           />
         </View>
-        <FlatList
-          style={styles.list}
-          data={this.state.messages.slice().reverse()}
-          keyExtractor={(item, index) => item.id}
-          renderItem={({item}) => {
-            return <MessageCell message={item} />;
-          }}
-        />
+        {this.state.isLoading ? (
+          <ActivityIndicator style={styles.activityIndicator} />
+        ) : (
+          <FlatList
+            style={styles.list}
+            data={this.state.messages.slice().reverse()}
+            keyExtractor={(item, index) => item.id}
+            renderItem={({item}) => {
+              return <MessageCell message={item} />;
+            }}
+          />
+        )}
       </View>
     );
   }
@@ -212,5 +221,8 @@ const styles = StyleSheet.create({
   actionTextInput: {
     flex: 1,
     paddingLeft: 16,
+  },
+  activityIndicator: {
+    flex: 1,
   },
 });

@@ -14,45 +14,6 @@ import {
   createDrawerNavigator,
 } from 'react-navigation';
 
-// const AppDrawerNavigator = createDrawerNavigator({
-//   general: {
-//     screen: createStackNavigator(
-//       {
-//         Home: {
-//           screen: Channel,
-//         },
-//       },
-//       {
-//         initialRouteParams: {
-//           channelName: 'general',
-//         },
-//       },
-//     ),
-//     navigationOptions: {
-//       drawerLabel: '#general',
-//     },
-//   },
-//   random: {
-//     screen: createStackNavigator(
-//       {
-//         Home: {
-//           screen: Channel,
-//         },
-//       },
-//       {
-//         initialRouteParams: {
-//           channelName: 'random',
-//         },
-//       },
-//     ),
-//     navigationOptions: {
-//       drawerLabel: '#random',
-//     },
-//   },
-// });
-
-// const ChannelContainer = createAppContainer(AppDrawerNavigator);
-
 export default class App extends Component<{}> {
   channels: Array<string>;
   _AppDrawerNavigator: any;
